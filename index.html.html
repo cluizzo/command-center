@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Market Command Center</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+  :root {
+    --bg-primary: #0b0e14;
+    --bg-secondary: #111520;
+    --bg-panel: #0f1219;
+    --border: #1a1f2e;
+    --border-accent: #2a3348;
+    --text-primary: #e8ecf4;
+    --text-secondary: #6b7a94;
+    --text-dim: #3d4a60;
+    --accent-gold: #d4a843;
+    --accent-silver: #a8b8cc;
+    --accent-green: #2ecc71;
+    --accent-red: #e74c3c;
+    --accent-blue: #3498db;
+    --glow-gold: rgba(212, 168, 67, 0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-primary);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text-primary);
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ─── HEADER ─── */
+  .header {
+    height: 44px;
+    min-height: 44px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    z-index: 100;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .header-logo {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    background: linear-gradient(135deg, var(--accent-gold), #f0d060);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .header-divider {
+    width: 1px;
+    height: 20px;
+    background: var(--border-accent);
+  }
+
+  .header-subtitle {
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .header-clock {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--text-secondary);
+    letter-spacing: 0.5px;
+  }
+
+  .header-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--accent-green);
+    font-weight: 500;
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent-green);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* ─── TICKER TAPE ─── */
+  .ticker-bar {
+    height: 30px;
+    min-height: 30px;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .ticker-track {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    animation: tickerScroll 45s linear infinite;
+    white-space: nowrap;
+    width: max-content;
+  }
+
+  @keyframes tickerScroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  .ticker-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 22px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .ticker-symbol { color: var(--accent-gold); font-weight: 600; }
+  .ticker-price { color: var(--text-primary); }
+
+  .ticker-change {
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+
+  .ticker-up { color: var(--accent-green); background: rgba(46, 204, 113, 0.1); }
+  .ticker-down { color: var(--accent-red); background: rgba(231, 76, 60, 0.1); }
+  .ticker-sep { color: var(--text-dim); padding: 0 4px; }
+
+  /* ─── MAIN 4×2 GRID ─── */
+  .main-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    min-height: 0;
+  }
+
+  .panel {
+    background: var(--bg-panel);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .panel-header {
+    height: 28px;
+    min-height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 10px;
+    background: rgba(17, 21, 32, 0.9);
+    border-bottom: 1px solid var(--border);
+    z-index: 10;
+  }
+
+  .panel-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+
+  .panel-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8px;
+    padding: 2px 5px;
+    border-radius: 3px;
+    background: rgba(212, 168, 67, 0.1);
+    color: var(--accent-gold);
+    border: 1px solid rgba(212, 168, 67, 0.2);
+  }
+
+  .panel-badge.live-badge {
+    background: rgba(231, 76, 60, 0.15);
+    color: var(--accent-red);
+    border-color: rgba(231, 76, 60, 0.3);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  .panel-badge.ais-badge {
+    background: rgba(52, 152, 219, 0.15);
+    color: var(--accent-blue);
+    border-color: rgba(52, 152, 219, 0.3);
+  }
+
+  .panel-content {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  .panel-content iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+
+  .tv-widget-container {
+    width: 100%;
+    height: 100%;
+  }
+
+  .tv-widget-container .tradingview-widget-container {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Live TV fallback */
+  .live-tv-fallback {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    background: linear-gradient(180deg, #0a0d14 0%, #111520 100%);
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-align: center;
+    gap: 8px;
+  }
+
+  .live-tv-fallback .icon { font-size: 28px; opacity: 0.4; }
+
+  .live-tv-fallback a {
+    color: var(--accent-gold);
+    text-decoration: none;
+    font-size: 10px;
+    border: 1px solid rgba(212, 168, 67, 0.3);
+    padding: 4px 12px;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+
+  .live-tv-fallback a:hover {
+    background: rgba(212, 168, 67, 0.1);
+    border-color: var(--accent-gold);
+  }
+
+  /* ─── NEWS FEED ─── */
+  .news-feed {
+    height: 100%;
+    overflow-y: auto;
+    padding: 8px 10px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-accent) transparent;
+  }
+
+  .news-feed::-webkit-scrollbar { width: 4px; }
+  .news-feed::-webkit-scrollbar-track { background: transparent; }
+  .news-feed::-webkit-scrollbar-thumb { background: var(--border-accent); border-radius: 2px; }
+
+  .news-item {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+
+  .news-item:last-child { border-bottom: none; }
+
+  .news-item:hover {
+    background: rgba(212, 168, 67, 0.04);
+  }
+
+  .news-item a {
+    text-decoration: none;
+    display: block;
+  }
+
+  .news-item-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--accent-red);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-bottom: 3px;
+  }
+
+  .news-item-title {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-primary);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .news-item a:hover .news-item-title {
+    color: var(--accent-gold);
+  }
+
+  .news-item-desc {
+    font-size: 10px;
+    color: var(--text-secondary);
+    margin-top: 3px;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .news-feed-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+  }
+
+  /* ─── FOOTER ─── */
+  .footer {
+    height: 22px;
+    min-height: 22px;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<div class="header">
+  <div class="header-left">
+    <div class="header-logo">Command Center</div>
+    <div class="header-divider"></div>
+    <div class="header-subtitle">Markets &amp; Macro Intelligence</div>
+  </div>
+  <div class="header-right">
+    <div class="header-status">
+      <span class="status-dot"></span>
+      LIVE
+    </div>
+    <div class="header-clock" id="clock"></div>
+  </div>
+</div>
+
+<!-- ═══ TICKER TAPE ═══ -->
+<div class="ticker-bar">
+  <div class="ticker-track" id="tickerTrack"></div>
+</div>
+
+<!-- ═══ MAIN 4×2 GRID ═══ -->
+<div class="main-grid">
+
+  <!-- ─── ROW 1 ─── -->
+
+  <!-- R1C1: Gold -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">Gold · XAUUSD</span>
+      <span class="panel-badge">5m</span>
+    </div>
+    <div class="panel-content">
+      <div class="tv-widget-container" id="tv-gold"></div>
+    </div>
+  </div>
+
+  <!-- R1C2: Silver -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">Silver · XAGUSD</span>
+      <span class="panel-badge">5m</span>
+    </div>
+    <div class="panel-content">
+      <div class="tv-widget-container" id="tv-silver"></div>
+    </div>
+  </div>
+
+  <!-- R1C3: S&P 500 -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">S&amp;P 500 · SPYM</span>
+      <span class="panel-badge">5m</span>
+    </div>
+    <div class="panel-content">
+      <div class="tv-widget-container" id="tv-spx"></div>
+    </div>
+  </div>
+
+  <!-- R1C4: Al Jazeera Live Headlines -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">Al Jazeera · Live Headlines</span>
+      <span class="panel-badge live-badge">LIVE</span>
+    </div>
+    <div class="panel-content">
+      <div id="aj-feed" class="news-feed"></div>
+    </div>
+  </div>
+
+  <!-- ─── ROW 2 ─── -->
+
+  <!-- R2C1: DXY -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">US Dollar · DOLLAR</span>
+      <span class="panel-badge">5m</span>
+    </div>
+    <div class="panel-content">
+      <div class="tv-widget-container" id="tv-dxy"></div>
+    </div>
+  </div>
+
+  <!-- R2C2: Crude Oil -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">Crude Oil · USOIL</span>
+      <span class="panel-badge">5m</span>
+    </div>
+    <div class="panel-content">
+      <div class="tv-widget-container" id="tv-oil"></div>
+    </div>
+  </div>
+
+  <!-- R2C3: Strait of Hormuz -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">Strait of Hormuz · AIS</span>
+      <span class="panel-badge ais-badge">VESSEL</span>
+    </div>
+    <div class="panel-content">
+      <iframe 
+        src="https://www.vesselfinder.com/aismap?lat=26.56&lon=56.25&zoom=9&width=600&height=400" 
+        loading="lazy"
+        title="VesselFinder - Strait of Hormuz"
+      ></iframe>
+    </div>
+  </div>
+
+  <!-- R2C4: Market Overview -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">Market Overview · Live</span>
+      <span class="panel-badge">QUOTES</span>
+    </div>
+    <div class="panel-content">
+      <div class="tv-widget-container" id="tv-overview"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ FOOTER ═══ -->
+<div class="footer">
+  <span>MARKET COMMAND CENTER v3.2 — TRADINGVIEW · VESSELFINDER · AL JAZEERA</span>
+  <span id="footerDate"></span>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// CLOCK
+// ═══════════════════════════════════════════════════════════════
+function updateClock() {
+  const now = new Date();
+  const opts = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'America/New_York' };
+  document.getElementById('clock').textContent = 
+    now.toLocaleTimeString('en-US', opts) + ' ET';
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+const today = new Date();
+document.getElementById('footerDate').textContent = 
+  today.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+// ═══════════════════════════════════════════════════════════════
+// TICKER TAPE
+// ═══════════════════════════════════════════════════════════════
+const tickerData = [
+  { sym: 'XAUUSD', price: '3,028.40', chg: '+1.24%', up: true },
+  { sym: 'XAGUSD', price: '33.85', chg: '+0.67%', up: true },
+  { sym: 'DXY', price: '103.42', chg: '-0.31%', up: false },
+  { sym: 'SPX', price: '5,638.20', chg: '-0.18%', up: false },
+  { sym: 'CL1!', price: '67.14', chg: '+0.89%', up: true },
+  { sym: 'US10Y', price: '4.285%', chg: '+0.02', up: true },
+  { sym: 'BTC', price: '83,240', chg: '+2.14%', up: true },
+  { sym: 'EUR/USD', price: '1.0892', chg: '+0.15%', up: true },
+  { sym: 'VIX', price: '21.34', chg: '+3.42%', up: true },
+  { sym: 'GDX', price: '42.18', chg: '+1.56%', up: true },
+  { sym: 'SLV', price: '31.02', chg: '+0.74%', up: true },
+  { sym: 'PSLV', price: '10.48', chg: '+0.82%', up: true },
+];
+
+function buildTicker() {
+  const track = document.getElementById('tickerTrack');
+  let html = '';
+  for (let r = 0; r < 3; r++) {
+    tickerData.forEach((t, i) => {
+      html += `
+        <span class="ticker-item">
+          <span class="ticker-symbol">${t.sym}</span>
+          <span class="ticker-price">${t.price}</span>
+          <span class="ticker-change ${t.up ? 'ticker-up' : 'ticker-down'}">${t.chg}</span>
+        </span>`;
+      if (i < tickerData.length - 1) html += '<span class="ticker-sep">·</span>';
+    });
+    html += '<span class="ticker-sep" style="padding:0 20px;">│</span>';
+  }
+  track.innerHTML = html;
+}
+buildTicker();
+
+// ═══════════════════════════════════════════════════════════════
+// TRADINGVIEW OFFICIAL WIDGET EMBEDS
+// ═══════════════════════════════════════════════════════════════
+function createTVWidget(containerId, symbol) {
+  const container = document.getElementById(containerId);
+  
+  const widgetDiv = document.createElement('div');
+  widgetDiv.className = 'tradingview-widget-container';
+  widgetDiv.style.width = '100%';
+  widgetDiv.style.height = '100%';
+
+  const innerDiv = document.createElement('div');
+  innerDiv.className = 'tradingview-widget-container__widget';
+  innerDiv.style.width = '100%';
+  innerDiv.style.height = '100%';
+  widgetDiv.appendChild(innerDiv);
+
+  const script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+  script.async = true;
+  script.textContent = JSON.stringify({
+    "autosize": true,
+    "symbol": symbol,
+    "interval": "5",
+    "timezone": "America/New_York",
+    "theme": "dark",
+    "style": "1",
+    "locale": "en",
+    "backgroundColor": "rgba(15, 18, 25, 1)",
+    "gridColor": "rgba(30, 40, 60, 0.3)",
+    "hide_top_toolbar": true,
+    "hide_legend": false,
+    "allow_symbol_change": true,
+    "save_image": false,
+    "calendar": false,
+    "hide_volume": false,
+    "support_host": "https://www.tradingview.com"
+  });
+
+  widgetDiv.appendChild(script);
+  container.appendChild(widgetDiv);
+}
+
+createTVWidget('tv-gold', 'OANDA:XAUUSD');
+createTVWidget('tv-silver', 'OANDA:XAGUSD');
+createTVWidget('tv-spx', 'AMEX:SPYM');
+createTVWidget('tv-dxy', 'TVC:DOLLAR');
+createTVWidget('tv-oil', 'TVC:USOIL');
+
+// ═══════════════════════════════════════════════════════════════
+// AL JAZEERA RSS HEADLINE FEED
+// Tries multiple CORS proxies as fallbacks
+// ═══════════════════════════════════════════════════════════════
+const AJ_FEED_URL = 'https://www.aljazeera.com/xml/rss/all.xml';
+
+const CORS_PROXIES = [
+  (url) => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
+  (url) => 'https://corsproxy.io/?' + encodeURIComponent(url),
+  (url) => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url),
+];
+
+async function fetchWithProxy(url) {
+  for (const proxy of CORS_PROXIES) {
+    try {
+      const proxyUrl = proxy(url);
+      const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(8000) });
+      if (res.ok) {
+        const text = await res.text();
+        if (text && text.includes('<item>')) return text;
+      }
+    } catch(e) { /* try next proxy */ }
+  }
+  // Last resort: try direct (works if running on local server with no CORS issues)
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    if (res.ok) return await res.text();
+  } catch(e) { /* all failed */ }
+  return null;
+}
+
+function renderFeed(xmlText, container) {
+  const parser = new DOMParser();
+  const xml = parser.parseFromString(xmlText, 'text/xml');
+  const items = xml.querySelectorAll('item');
+  
+  let html = '';
+  const count = Math.min(items.length, 30);
+  
+  for (let i = 0; i < count; i++) {
+    const item = items[i];
+    const title = item.querySelector('title')?.textContent || '';
+    const link = item.querySelector('link')?.textContent || '#';
+    const desc = item.querySelector('description')?.textContent || '';
+    const pubDate = item.querySelector('pubDate')?.textContent || '';
+    
+    let timeStr = '';
+    if (pubDate) {
+      const d = new Date(pubDate);
+      const now = new Date();
+      const diffMin = Math.floor((now - d) / 60000);
+      
+      if (diffMin < 1) timeStr = 'JUST NOW';
+      else if (diffMin < 60) timeStr = diffMin + 'm AGO';
+      else if (diffMin < 1440) timeStr = Math.floor(diffMin / 60) + 'h AGO';
+      else timeStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+    
+    const cleanDesc = desc.replace(/<[^>]*>/g, '').trim();
+    
+    html += `
+      <div class="news-item">
+        <a href="${link}" target="_blank">
+          <div class="news-item-time">${timeStr}</div>
+          <div class="news-item-title">${title}</div>
+          ${cleanDesc ? `<div class="news-item-desc">${cleanDesc}</div>` : ''}
+        </a>
+      </div>`;
+  }
+  
+  container.innerHTML = html || '<div class="news-feed-loading">No headlines available</div>';
+}
+
+async function fetchAJFeed() {
+  const container = document.getElementById('aj-feed');
+  
+  const xmlText = await fetchWithProxy(AJ_FEED_URL);
+  
+  if (xmlText) {
+    renderFeed(xmlText, container);
+  } else {
+    container.innerHTML = `
+      <div class="news-feed-loading" style="flex-direction:column;gap:8px;">
+        <div>Feed unavailable</div>
+        <div style="font-size:9px;color:var(--text-dim);">CORS proxy may be down</div>
+        <a href="https://www.aljazeera.com/" target="_blank" 
+           style="color:var(--accent-gold);font-size:10px;text-decoration:none;
+                  border:1px solid rgba(212,168,67,0.3);padding:4px 12px;border-radius:4px;">
+          Open AlJazeera.com &#x2197;
+        </a>
+      </div>`;
+  }
+}
+
+// Initial fetch + refresh every 2 minutes
+document.getElementById('aj-feed').innerHTML = '<div class="news-feed-loading">Loading headlines...</div>';
+fetchAJFeed();
+setInterval(fetchAJFeed, 120000);
+
+// ═══════════════════════════════════════════════════════════════
+// TRADINGVIEW MARKET OVERVIEW WIDGET
+// ═══════════════════════════════════════════════════════════════
+(function() {
+  const container = document.getElementById('tv-overview');
+  const widgetDiv = document.createElement('div');
+  widgetDiv.className = 'tradingview-widget-container';
+  widgetDiv.style.width = '100%';
+  widgetDiv.style.height = '100%';
+
+  const innerDiv = document.createElement('div');
+  innerDiv.className = 'tradingview-widget-container__widget';
+  innerDiv.style.width = '100%';
+  innerDiv.style.height = '100%';
+  widgetDiv.appendChild(innerDiv);
+
+  const script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js';
+  script.async = true;
+  script.textContent = JSON.stringify({
+    "colorTheme": "dark",
+    "dateRange": "1D",
+    "showChart": true,
+    "locale": "en",
+    "width": "100%",
+    "height": "100%",
+    "largeChartUrl": "",
+    "isTransparent": true,
+    "showSymbolLogo": true,
+    "showFloatingTooltip": true,
+    "plotLineColorGrowing": "rgba(46, 204, 113, 1)",
+    "plotLineColorFalling": "rgba(231, 76, 60, 1)",
+    "gridLineColor": "rgba(30, 40, 60, 0.3)",
+    "scaleFontColor": "rgba(107, 122, 148, 1)",
+    "belowLineFillColorGrowing": "rgba(46, 204, 113, 0.05)",
+    "belowLineFillColorFalling": "rgba(231, 76, 60, 0.05)",
+    "belowLineFillColorGrowingBottom": "rgba(46, 204, 113, 0)",
+    "belowLineFillColorFallingBottom": "rgba(231, 76, 60, 0)",
+    "symbolActiveColor": "rgba(212, 168, 67, 0.12)",
+    "tabs": [
+      {
+        "title": "Metals",
+        "symbols": [
+          {"s": "OANDA:XAUUSD", "d": "Gold"},
+          {"s": "OANDA:XAGUSD", "d": "Silver"},
+          {"s": "TVC:PLATINUM", "d": "Platinum"},
+          {"s": "TVC:PALLADIUM", "d": "Palladium"}
+        ]
+      },
+      {
+        "title": "Indices",
+        "symbols": [
+          {"s": "AMEX:SPYM", "d": "S&P 500"},
+          {"s": "NASDAQ:QQQ", "d": "Nasdaq 100"},
+          {"s": "AMEX:DIA", "d": "Dow Jones"},
+          {"s": "TVC:VIX", "d": "VIX"}
+        ]
+      },
+      {
+        "title": "Forex",
+        "symbols": [
+          {"s": "TVC:DOLLAR", "d": "US Dollar"},
+          {"s": "FX:EURUSD", "d": "EUR/USD"},
+          {"s": "FX:USDJPY", "d": "USD/JPY"},
+          {"s": "FX:GBPUSD", "d": "GBP/USD"}
+        ]
+      },
+      {
+        "title": "Energy",
+        "symbols": [
+          {"s": "TVC:USOIL", "d": "WTI Crude"},
+          {"s": "TVC:UKOIL", "d": "Brent Crude"},
+          {"s": "NYMEX:NG1!", "d": "Natural Gas"}
+        ]
+      },
+      {
+        "title": "Crypto",
+        "symbols": [
+          {"s": "BITSTAMP:BTCUSD", "d": "Bitcoin"},
+          {"s": "BITSTAMP:ETHUSD", "d": "Ethereum"}
+        ]
+      }
+    ]
+  });
+
+  widgetDiv.appendChild(script);
+  container.appendChild(widgetDiv);
+})();
+
+</script>
+</body>
+</html>
